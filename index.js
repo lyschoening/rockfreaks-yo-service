@@ -25,7 +25,6 @@ if(!YO_TOKEN) {
 }
 
 function Yo(link, callback) {
-    console.log(YO_TOKEN);
     request.post('http://api.justyo.co/yo/', {
         form: {
             api_token: process.env.YO_TOKEN,
@@ -72,7 +71,6 @@ var service = new CronJob('00 */15 * * * *', run = function () {
 
                             console.log('Yo ...');
                             Yo(article, function (err, res, data) {
-                                console.log(err, res, data);
                                 console.log('... sent for ' + article);
                             });
 
