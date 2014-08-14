@@ -17,10 +17,15 @@ if (process.env.REDISTOGO_URL) {
 }
 
 var USER_AGENT = 'Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.16 Safari/537.36';
+var YO_TOKEN = process.env.YO_TOKEN;
 
+if(!YO_TOKEN) {
+    console.error('Yo token missing, exiting.');
+    process.exit(1);
+}
 
 function Yo(link, callback) {
-    console.log(process.env.YO_TOKEN);
+    console.log(YO_TOKEN);
     request.post('http://api.justyo.co/yo/', {
         form: {
             api_token: process.env.YO_TOKEN,
@@ -75,14 +80,11 @@ var service = new CronJob('00 */15 * * * *', run = function () {
                         } else {
                             console.log('(' + i + ') old article');
                         }
-
-                    })
+                    });
                 })
             } else {
-                console.log('no album reviews found')
+                console.log('no album reviews found');
             }
-
-            //process.exit(1);
         });
     })
 
