@@ -25,10 +25,9 @@ if(!YO_TOKEN) {
 }
 
 function Yo(link, callback) {
-    request.post('http://api.justyo.co/yo/', {
+    request.post('http://api.justyo.co/yoall/', {
         form: {
             api_token: process.env.YO_TOKEN,
-            username: 'LYSCHOENING',
             link: link
         }
     }, callback);
