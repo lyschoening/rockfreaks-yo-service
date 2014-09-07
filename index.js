@@ -71,6 +71,11 @@ var service = new CronJob('00 */15 * * * *', run = function () {
                             console.log('Yo ...');
                             Yo(article, function (err, res, data) {
                                 console.log('... sent for ' + article);
+                                if(err) {
+                                    console.error("    ", err)
+                                } else {
+                                    console.log("    ", res.statusCode, res.body, data);
+                                }
                             });
 
                             redis.sadd(['yolinks', article]);
