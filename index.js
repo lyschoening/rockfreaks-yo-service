@@ -24,6 +24,7 @@ if(!YO_TOKEN) {
     process.exit(1);
 }
 
+
 function Yo(link, callback) {
     request.post('http://api.justyo.co/yoall/', {
         form: {
@@ -33,8 +34,35 @@ function Yo(link, callback) {
     }, callback);
 }
 
+
+var queue = [];
+
+var Yoer = new CronJob('00 */3 * * * *', function () {
+    var article;
+
+    if(typeof (article = queue.pop()) !== 'undefined') {
+        redis.sadd(['yolinks', article], function (err, replies) {
+
+            var i;
+            if((i = queue.indexOf(article)) !== -1) {
+                queue.splice(i, 1);
+            }
+
+            Yo(article, function (err, res, data) {
+                console.log('... sent for ' + article);
+                if(err) {
+                    console.error("    ", err)
+                } else {
+                    console.log("    ", res.statusCode, res.body);
+                }
+            });
+        });
+    }
+});
+
+
 var run;
-var service = new CronJob('00 */15 * * * *', run = function () {
+var Service = new CronJob('00 */15 * * * *', run = function () {
     // Runs every 15 minutes of every day
     console.log('checking RF.net for updates');
 
@@ -64,25 +92,19 @@ var service = new CronJob('00 */15 * * * *', run = function () {
                 console.log('found ' + articleLinks.length + ' album reviews:');
 
                 articleLinks.forEach(function (article, i) {
-                    redis.sismember(['yolinks', article], function (err, replies) {
-                        if(replies == 0) {
-                            console.log('(' + i + ') new article: ' + article);
+                    if(queue.indexOf(article) === 1) {
+                        console.log('[' + i + '] in queue')
+                    } else {
+                        redis.sismember(['yolinks', article], function (err, replies) {
+                            if(replies == 0) {
+                                queue.push(article);
+                                console.log('[' + i + '] added to queue');
+                            } else {
+                                console.log('[' + i + '] already been broadcast');
+                            }
+                        });
+                    }
 
-                            console.log('Yo ...');
-                            Yo(article, function (err, res, data) {
-                                console.log('... sent for ' + article);
-                                if(err) {
-                                    console.error("    ", err)
-                                } else {
-                                    console.log("    ", res.statusCode, res.body, data);
-                                }
-                            });
-
-                            redis.sadd(['yolinks', article]);
-                        } else {
-                            console.log('(' + i + ') old article');
-                        }
-                    });
                 })
             } else {
                 console.log('no album reviews found');
@@ -93,5 +115,6 @@ var service = new CronJob('00 */15 * * * *', run = function () {
 });
 
 run();
-service.start();
-console.log('ROCKFREAKS service is running');
+Service.start();
+Yoer.start();
+console.log('ROCKFREAKS Service is running');
